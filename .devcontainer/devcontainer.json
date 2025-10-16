@@ -20,7 +20,8 @@
       "installOhMyZsh": true,
       "installOhMyZshConfig": true
     },
-    "ghcr.io/devcontainers-extra/features/vue-cli:2": {}
+    "ghcr.io/devcontainers-extra/features/vue-cli:2": {},
+    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {}
   },
 
   "customizations": {
