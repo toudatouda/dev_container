@@ -13,9 +13,7 @@
 
   "features": {
     // 使用官方维护的 features 以获得更好的兼容性和稳定性
-    "ghcr.io/devcontainers/features/anaconda:1": {},
-    "ghcr.io/devcontainers-extra/features/vue-cli:2": {}
-    // Vue CLI 可在容器启动后通过 npm 安装: npm install -g @vue/cli
+    "ghcr.io/devcontainers/features/anaconda:1": {}
   },
 
   "customizations": {
