@@ -3,6 +3,11 @@ services:
     build:
       context: .
       dockerfile: .devcontainer/Dockerfile
+      args:
+        - http_proxy=http://host.docker.internal:7897
+        - https_proxy=http://host.docker.internal:7897
+        - HTTP_PROXY=http://host.docker.internal:7897
+        - HTTPS_PROXY=http://host.docker.internal:7897
     # network_mode: "host" 已被移除，以启用标准的容器间网络。
 
     volumes:

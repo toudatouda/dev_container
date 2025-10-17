@@ -13,15 +13,7 @@
 
   "features": {
     // 使用官方维护的 features 以获得更好的兼容性和稳定性
-    "ghcr.io/devcontainers/features/anaconda:1": {},
-    "ghcr.io/devcontainers/features/common-utils:2": {
-      "installZsh": true,
-      "configureZshAsDefaultShell": true,
-      "installOhMyZsh": true,
-      "installOhMyZshConfig": true
-    },
-    "ghcr.io/devcontainers-extra/features/vue-cli:2": {},
-    "ghcr.io/meaningful-ooo/devcontainer-features/homebrew:2": {}
+    "ghcr.io/devcontainers/features/anaconda:1": {}
   },
 
   "customizations": {
