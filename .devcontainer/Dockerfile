@@ -14,16 +14,34 @@ ENV HTTP_PROXY=${HTTP_PROXY}
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV HOMEBREW_CURL_INSECURE=true
 
+# 禁用 apt 的 HTTPS 证书验证，以解决代理可能导致的 502 Bad Gateway 或 SSL 错误
+RUN echo 'Acquire::https::Verify-Peer "false";' > /etc/apt/apt.conf.d/99verify-https && \
+    echo 'Acquire::https::Verify-Host "false";' >> /etc/apt/apt.conf.d/99verify-https
+
+# 明确配置 apt 使用代理
+RUN echo 'Acquire::http::Proxy "${http_proxy}";' > /etc/apt/apt.conf.d/01proxy && \
+    echo 'Acquire::https::Proxy "${https_proxy}";' >> /etc/apt/apt.conf.d/01proxy
+
 # 配置 Homebrew 使用国内镜像源，提高下载速度和稳定性
 ENV HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
 ENV HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
 
 # 为 git 配置代理，因为 Homebrew 的安装依赖 git
 RUN git config --global http.proxy "${http_proxy}" && \
-    git config --global https.proxy "${https_proxy}"
+    git config --global https.proxy "${https_proxy}" && \
+    git config --global http.sslVerify false
 
-# 3. 安装 Homebrew 所需的依赖
-RUN apt-get -o Acquire::http::proxy="${http_proxy}" -o Acquire::https::proxy="${https_proxy}" update && apt-get install -y \
+# 3. 更换 apt 源为清华大学镜像源，并安装 Homebrew 所需的依赖
+RUN { \
+    echo "Types: deb"; \
+    echo "URIs: https://mirrors.tuna.tsinghua.edu.cn/ubuntu-ports/"; \
+    echo "Suites: jammy jammy-updates jammy-backports jammy-security"; \
+    echo "Components: main restricted universe multiverse"; \
+    echo "Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg"; \
+    } > /etc/apt/sources.list.d/ubuntu.sources && \
+    # 清除旧的 sources.list 文件，避免冲突
+    rm -f /etc/apt/sources.list && \
+    apt-get update && apt-get install -y \
     build-essential \
     curl \
     file \
@@ -57,23 +75,24 @@ ENV MANPATH="/home/linuxbrew/.linuxbrew/share/man:${MANPATH}"
 ENV INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH}"
 
 # 6. 使用 Homebrew 安装常用开发工具
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install netcat
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install wget
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install jq
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install yq
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install ripgrep
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install fd
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install bat
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install fzf
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install htop
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install tree
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install tmux
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install httpie
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install tldr
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install eza
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install gh
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install git-delta
-RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install lazygit
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install \
+    netcat \
+    wget \
+    jq \
+    yq \
+    ripgrep \
+    fd \
+    bat \
+    fzf \
+    htop \
+    tree \
+    tmux \
+    httpie \
+    tldr \
+    eza \
+    gh \
+    git-delta \
+    lazygit
 
 # 7. 修正 Homebrew 目录的权限，以便其他用户（如 vscode）可以使用
 RUN chmod -R 755 /home/linuxbrew/.linuxbrew

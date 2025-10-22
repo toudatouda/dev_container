@@ -11,11 +11,6 @@
     "https_proxy": "http://host.docker.internal:7897"
   },
 
-  "features": {
-    // 使用官方维护的 features 以获得更好的兼容性和稳定性
-    "ghcr.io/devcontainers/features/anaconda:1": {}
-  },
-
   "customizations": {
     "vscode": {
       "settings": {
