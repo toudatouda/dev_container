@@ -4,13 +4,6 @@
   "service": "app",
   "workspaceFolder": "/workspace",
 
-  "containerEnv": {
-    "HTTP_PROXY": "http://host.docker.internal:7897",
-    "HTTPS_PROXY": "http://host.docker.internal:7897",
-    "http_proxy": "http://host.docker.internal:7897",
-    "https_proxy": "http://host.docker.internal:7897"
-  },
-
   "customizations": {
     "vscode": {
       "settings": {

@@ -4,14 +4,13 @@ FROM mcr.microsoft.com/devcontainers/base:ubuntu
 # 1. 声明构建参数，并给它们一个空的默认值
 ARG http_proxy="http://host.docker.internal:7897"
 ARG https_proxy="http://host.docker.internal:7897"
-ARG HTTP_PROXY="http://host.docker.internal:7897"
-ARG HTTPS_PROXY="http://host.docker.internal:7897"
 
 # 2. 将这些参数设置为环境变量，以便 RUN 指令可以使用它们
+#    同时设置大写的变量是为了兼容一些工具
 ENV http_proxy=${http_proxy}
 ENV https_proxy=${https_proxy}
-ENV HTTP_PROXY=${HTTP_PROXY}
-ENV HTTPS_PROXY=${HTTPS_PROXY}
+ENV HTTP_PROXY=${http_proxy}
+ENV HTTPS_PROXY=${https_proxy}
 ENV HOMEBREW_CURL_INSECURE=true
 
 # 禁用 apt 的 HTTPS 证书验证，以解决代理可能导致的 502 Bad Gateway 或 SSL 错误
