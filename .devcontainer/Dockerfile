@@ -14,6 +14,10 @@ ENV HTTP_PROXY=${HTTP_PROXY}
 ENV HTTPS_PROXY=${HTTPS_PROXY}
 ENV HOMEBREW_CURL_INSECURE=true
 
+# 配置 Homebrew 使用国内镜像源，提高下载速度和稳定性
+ENV HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api"
+ENV HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles"
+
 # 为 git 配置代理，因为 Homebrew 的安装依赖 git
 RUN git config --global http.proxy "${http_proxy}" && \
     git config --global https.proxy "${https_proxy}"
@@ -31,6 +35,7 @@ RUN apt-get -o Acquire::http::proxy="${http_proxy}" -o Acquire::https::proxy="${
 # 创建用于安装 Homebrew 的非 root 用户
 RUN useradd --create-home --shell /bin/bash linuxbrew && \
     echo "linuxbrew ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/linuxbrew
+RUN chmod 755 /home/linuxbrew
 
 # 为 linuxbrew 用户配置 git
 RUN sudo -u linuxbrew git config --global http.proxy "${http_proxy}" && \
@@ -41,6 +46,8 @@ RUN sudo -u linuxbrew git config --global http.proxy "${http_proxy}" && \
 RUN sudo -u linuxbrew \
     http_proxy=${http_proxy} \
     https_proxy=${https_proxy} \
+    HOMEBREW_API_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles/api" \
+    HOMEBREW_BOTTLE_DOMAIN="https://mirrors.tuna.tsinghua.edu.cn/homebrew-bottles" \
     NONINTERACTIVE=1 \
     /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
@@ -68,3 +75,9 @@ RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/
 RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install git-delta
 RUN sudo -u linuxbrew http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install lazygit
 
+# 7. 修正 Homebrew 目录的权限，以便其他用户（如 vscode）可以使用
+RUN chmod -R 755 /home/linuxbrew/.linuxbrew
+
+# 8. 配置 Shell 环境以识别 Homebrew
+RUN echo '\neval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' | sudo tee -a /etc/zsh/zshrc && \
+    echo '\neval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' | sudo tee -a /etc/profile

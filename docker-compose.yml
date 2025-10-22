@@ -1,4 +1,5 @@
 services:
+# docker-compose build --no-cache --progress plain app
   app:
     build:
       context: .
