@@ -12,6 +12,9 @@ ENV https_proxy=${https_proxy}
 ENV HTTP_PROXY=${http_proxy}
 ENV HTTPS_PROXY=${https_proxy}
 ENV HOMEBREW_CURL_INSECURE=true
+ENV CURL_SSL_NO_REVOKE=1
+ENV CURL_CONNECT_TIMEOUT=30
+ENV CURL_TIMEOUT=60
 
 # 禁用 apt 的 HTTPS 证书验证，以解决代理可能导致的 502 Bad Gateway 或 SSL 错误
 RUN echo 'Acquire::https::Verify-Peer "false";' > /etc/apt/apt.conf.d/99verify-https && \
@@ -46,6 +49,7 @@ RUN { \
     file \
     git \
     procps \
+    connect-proxy \
     && rm -rf /var/lib/apt/lists/*
 
 # 4. 以安装 Homebrew
@@ -74,26 +78,34 @@ ENV MANPATH="/home/linuxbrew/.linuxbrew/share/man:${MANPATH}"
 ENV INFOPATH="/home/linuxbrew/.linuxbrew/share/info:${INFOPATH}"
 
 # 6. 使用 Homebrew 安装常用开发工具
-RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install \
-    netcat \
-    wget \
-    jq \
-    yq \
-    ripgrep \
-    fd \
-    bat \
-    fzf \
-    htop \
-    tree \
-    tmux \
-    httpie \
-    tldr \
-    eza \
-    gh \
-    git-delta \
-    lazygit
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install netcat wget jq yq
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install ripgrep
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install fd
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install bat
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install fzf
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install htop tree tmux httpie
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install eza
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install gh
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install git-delta
+RUN sudo -u linuxbrew HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install lazygit
 
-# 7. 修正 Homebrew 目录的权限，以便其他用户（如 vscode）可以使用
+ARG TARGETARCH
+
+# 7. 安装 Miniconda
+RUN case "${TARGETARCH}" in \
+        "amd64") MINICONDA_ARCH="x86_64" ;; \
+        "arm64") MINICONDA_ARCH="aarch64" ;; \
+        *) echo "Unsupported architecture: ${TARGETARCH}"; exit 1 ;; \
+    esac && \
+    curl -fsSL -o /tmp/miniconda.sh https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-${MINICONDA_ARCH}.sh && \
+    chmod +x /tmp/miniconda.sh && \
+    /tmp/miniconda.sh -b -p /opt/conda && \
+    rm /tmp/miniconda.sh
+
+# 8. 配置 Miniconda 环境变量
+ENV PATH="/opt/conda/bin:${PATH}"
+
+# 9. 修正 Homebrew 目录的权限，以便其他用户（如 vscode）可以使用
 RUN chmod -R 755 /home/linuxbrew/.linuxbrew
 
 # 8. 配置 Shell 环境以识别 Homebrew
