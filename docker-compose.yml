@@ -17,6 +17,9 @@ services:
     # 保持容器持续运行
     command: sleep infinity
 
+    ports:
+      - "5678:5678"
+
   postgres:
     image: postgres:15
     restart: unless-stopped
@@ -29,25 +32,25 @@ services:
     ports:
       - "5432:5432"
 
-  mysql:
-    image: mysql:8
-    restart: unless-stopped
-    environment:
-      - MYSQL_ROOT_PASSWORD=root
-      - MYSQL_DATABASE=app_db
-      - MYSQL_USER=mysql
-      - MYSQL_PASSWORD=mysql
-    volumes:
-      - mysql-data:/var/lib/mysql
-    ports:
-      - "3306:3306"
+#  mysql:
+#    image: mysql:8
+#    restart: unless-stopped
+#    environment:
+#      - MYSQL_ROOT_PASSWORD=root
+#      - MYSQL_DATABASE=app_db
+#      - MYSQL_USER=mysql
+#      - MYSQL_PASSWORD=mysql
+#    volumes:
+#      - mysql-data:/var/lib/mysql
+#    ports:
+#      - "3306:3306"
 
-  redis:
-    image: redis:7
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
+#  redis:
+#    image: redis:7
+#    restart: unless-stopped
+#    ports:
+#      - "6379:6379"
 
 volumes:
   postgres-data:
-  mysql-data:
+#  mysql-data:

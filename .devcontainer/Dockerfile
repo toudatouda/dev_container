@@ -129,3 +129,9 @@ RUN chmod -R 755 /home/linuxbrew/.linuxbrew
 # 10. 配置 Shell 环境以识别 Homebrew
 RUN echo '\neval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' | sudo tee -a /etc/zsh/zshrc && \
     echo '\neval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' | sudo tee -a /etc/profile
+
+# 11. 安装 Node.js 和 n8n
+RUN sudo -u vscode HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install node && \
+    sudo -u vscode /home/linuxbrew/.linuxbrew/bin/npm config set proxy ${http_proxy} && \
+    sudo -u vscode /home/linuxbrew/.linuxbrew/bin/npm config set https-proxy ${https_proxy} && \
+    sudo -u vscode /home/linuxbrew/.linuxbrew/bin/npm install -g n8n n8n-node-dev
