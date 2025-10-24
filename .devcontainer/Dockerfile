@@ -131,7 +131,24 @@ RUN echo '\neval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' | sudo tee -
     echo '\neval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' | sudo tee -a /etc/profile
 
 # 11. 安装 Node.js 和 n8n
-RUN sudo -u vscode HOMEBREW_CURL_ARGS="--insecure" http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install node && \
-    sudo -u vscode /home/linuxbrew/.linuxbrew/bin/npm config set proxy ${http_proxy} && \
-    sudo -u vscode /home/linuxbrew/.linuxbrew/bin/npm config set https-proxy ${https_proxy} && \
-    sudo -u vscode /home/linuxbrew/.linuxbrew/bin/npm install -g n8n n8n-node-dev
+RUN retry_command() { \
+      local cmd="$@"; \
+      for i in $(seq 1 5); do \
+        if eval "${cmd}"; then \
+          return 0; \
+        else \
+          echo "Command failed, attempt $i/5. Retrying in 5 seconds..."; \
+          sleep 5; \
+        fi; \
+      done; \
+      echo "Command failed after 5 attempts."; \
+      return 1; \
+    }; \
+    BREW_INSTALL_NODE="sudo -u vscode HOMEBREW_CURL_ARGS='--insecure' http_proxy=${http_proxy} https_proxy=${https_proxy} /home/linuxbrew/.linuxbrew/bin/brew install node"; \
+    NPM_GLOBAL_PREFIX="sudo -u vscode PATH=\"/home/linuxbrew/.linuxbrew/bin:${PATH}\" /home/linuxbrew/.linuxbrew/bin/npm"; \
+    retry_command "${BREW_INSTALL_NODE}" && \
+    eval "${NPM_GLOBAL_PREFIX} config set proxy ${http_proxy}" && \
+    eval "${NPM_GLOBAL_PREFIX} config set https-proxy ${https_proxy}" && \
+    eval "${NPM_GLOBAL_PREFIX} install -g n8n n8n-node-dev" && \
+    eval "${NPM_GLOBAL_PREFIX} install -g vitest" && \
+    eval "${NPM_GLOBAL_PREFIX} install -g pnpm"
